@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">3D Face</string>
+
+    <!-- 
+    <string name="blink">"data-blink.txt"</string>
+    <string name="head_base">"data_base.txt"</string>
+    
+    <string name="head_AI">"data_AI.txt"</string>
+    <string name="head_CKGJRSTHYZ">"data_CKGJRSTHYZ.txt"</string>
+    <string name="head_E">"data_E.txt"</string>
+    <string name="head_FV">"data_FV.txt"</string>
+    <string name="head_MBP">"data_MBP.txt"</string>
+    <string name="head_O">"data_O.txt"</string>
+    <string name="head_ULDNT">"data_UDLNT.txt"</string>
+    <string name="head_WQOo">"data_WQOo.txt"</string>
+     -->
+    
+    <string name="mouth_base">"mouth_base.txt"</string>
+    <string name="mouth_AI">"mouth_AI.txt"</string>
+    <string name="mouth_CKGJRSTHYZ">"mouth_CKGJRSTHYZ.txt"</string>
+    <string name="mouth_E">"mouth_E.txt"</string>
+    <string name="mouth_FV">"mouth_FV.txt"</string>
+    <string name="mouth_MBP">"mouth_MBP.txt"</string>
+    <string name="mouth_O">"mouth_O.txt"</string>
+    <string name="mouth_ULDNT">"mouth_UDLNT.txt"</string>
+    <string name="mouth_WQOo">"mouth_WQOo.txt"</string>
+    <string name="head_base">head_base.txt</string>
+	<string name="eyes_closed">eyes_closed.txt</string>
+    <string name="eyes_angrey">eyes_angrey.txt</string>
+     <string name="eyes_surprised">eyes_surprised.txt</string>
+    
+    <string name="sample_hello">Hello. This is a sample test of the application three D Face.</string>
+    <string name="sample_think">And we must study through readding, listening, discussing, 
+            			observing and thinking. We must not neglect any one of those ways of study. 
+            			The trouble with most of us is that we fall down on the latter, thinking, 
+            			because it\'s hard work for people to think, And, as 
+            			Dr. Nicholas Murray Butler said recently, \'all of the problems of 
+            			the world could be settled easily if men were only willing to think.\' 
+            			Thomas J. Watson, Former Chairman and CEO of IBM.
+            			</string>
+    
+</resources>

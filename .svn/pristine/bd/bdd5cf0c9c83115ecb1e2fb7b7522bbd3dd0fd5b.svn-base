@@ -1,0 +1,506 @@
+package edu.csusb;
+
+import java.util.Locale;
+import java.util.Random;
+
+import android.content.Context;
+import android.opengl.GLSurfaceView;
+import android.os.SystemClock;
+import android.speech.tts.TextToSpeech;
+import android.util.Log;
+import android.view.MotionEvent;
+
+/**
+ * Implement a simple rotation control.
+ *
+ */
+class TouchSurfaceView extends GLSurfaceView {
+
+	private static final char BLINK = '^';
+	private static final char ANGREY = '$';
+	private static final char SURPRISED = '@';
+	private static final char Th = '~';
+	private static final char Oo = '#';
+	
+	private boolean flushQueue = true;
+	
+	private String rendering = "";
+	
+	//private ArrayList<String> textBuffer = new ArrayList<String>();
+	private TextToSpeech tts;
+	
+	private static final int offset = 30; 
+	private long ttsHead = 0;
+	private long animHead = 0;
+	private long tail = 0;
+	
+	private String inputText = "";
+
+	
+	private char[] textBuffer = new char[offset];
+	private StringBuffer word = new StringBuffer();
+	
+	public TouchSurfaceView(Context context){
+		super(context);
+	}
+	
+    public TouchSurfaceView(Context context, TextToSpeech tts) {
+        super(context);
+        
+        
+        this.tts = tts;
+        
+        renderer = new ObjectRenderer(context);
+        setRenderer(renderer);
+        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        
+        //Update Text buffer
+        Thread producerThread = new Thread(){
+            public void run(){
+                
+            	try {
+                    while(true){
+                    	sleep(100); 
+                    	setTextBuffer();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.d("Error", " "+e);
+                }
+            }
+        };
+        
+        
+        //Update TTS
+        Thread ttsThread = new Thread(){
+            public void run(){
+                
+            	try {
+                    while(true){
+                    	sleep(100); 
+                    	updateTTS();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.d("Error", " "+e);
+                }
+            }
+        };
+        
+        //Update face
+        Thread animationThread = new Thread(){
+            public void run(){
+                
+            	try {
+                    while(true){
+                    	sleep(100); 
+                    	updateFace();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.d("Error", " "+e);
+                }
+            }
+        };
+        
+        
+        
+        //Start threads
+        producerThread.start();
+        ttsThread.start();
+        animationThread.start();
+       
+        
+        
+    }
+
+ 
+    public void setInputText(String text){
+    	
+    	if(tail == ttsHead && tail == animHead){
+    		flushQueue = true;
+    		onIdle();
+    	}
+    	
+    	if(text.length() == 0){
+    		return;
+    	}
+    	
+    	
+    	text = text.toLowerCase(Locale.US);
+    	
+    	//Add a word terminator to the last word
+    	if(!isPunctuation(text.charAt(text.length() - 1))){
+    		text += ".";
+    	}
+    	
+    	
+    	//Phenomes need to be characters
+    	text.replace("th", Th + "");
+    	text.replace("oo", Oo + "");
+    	
+    	//TODO
+    	//replace numbers with words
+    	
+    	this.inputText = text;
+    }
+
+    
+    
+     private void setTextBuffer(){
+    	//if(tail == ttsHead && tail == animHead){
+    	//	this.textBuffer.delete(0, this.textBuffer.length());
+    	//}
+    	 flushQueue = false; 
+    	 
+    	for(int i=0; i< this.inputText.length(); i++){
+    		while(tail - ttsHead >= offset || tail - animHead >= offset){
+    	    	SystemClock.sleep(50);
+    		}
+
+    		int idx = (int)(tail % offset);
+    		
+    		this.textBuffer[idx] = this.inputText.charAt(i);
+    		tail = incrementLong(tail);
+    	}
+    	
+    	this.inputText = "";
+    	//this.textBuffer.append(text);
+    	//this.tail = this.textBuffer.length();
+    }
+
+    private long incrementLong(long l){
+    	if(l + 1 < Long.MAX_VALUE){
+    		return l + 1;
+    	}
+    	return l % offset + 1;
+    }
+    
+    
+    private void updateTTS(){
+    	//Pass the text over to the animation
+    
+    	for(long i= ttsHead; i< tail; i++){
+    		
+    		
+    		int idx = (int) (i%offset);
+    		char ch = this.textBuffer[idx];
+    		word.append(ch);
+    		
+    		ttsHead = incrementLong(ttsHead);
+    	}	
+
+	
+    	
+    	if(word.length() > 0 && isPunctuation(word.charAt(word.length() - 1))){
+    	
+    		String wordStr = word.toString();
+    		
+    		//Phenomes need to be characters
+        	wordStr.replaceAll(Th + "" , "th");
+        	wordStr.replaceAll(Oo + "", "oo");
+        	
+        	
+    		/*
+    		//Regulate speech rate based on the delay between 
+    		//TTS progress and animation progress
+    		float speechRate = 1 - (animHead - ttsHead) / offset;
+    		if(speechRate > 1.2f){
+    			speechRate = 1.2f;
+    		}
+    		if(speechRate < 0.8f){
+    			speechRate = 0.8f;
+    		}
+    		*/
+        	
+        	wordStr.replaceAll(" ", "    ");
+        	
+        	wordStr = "     " + wordStr;
+		
+    		//this.tts.setSpeechRate(0.9f);
+    		
+    		this.tts.speak(wordStr, (flushQueue ? TextToSpeech.QUEUE_FLUSH : TextToSpeech.QUEUE_ADD), null);
+			
+    		word = new StringBuffer();
+		
+    		while(ttsHead - animHead > offset / 3){
+    			SystemClock.sleep(50);
+    		}
+
+    	}
+    	
+    }
+    
+    
+    private void animateRandom(){
+    	Random generator = new Random();
+		int r = generator.nextInt(100);
+		
+		//Log.v("Random", r + "");
+		
+		switch(r){
+			case 10: case 40:
+				animateFace(BLINK);
+				break;
+			case 20: case 60:
+				animateFace(ANGREY);
+				break;
+			case 15: case 70:
+				animateFace(SURPRISED);
+				break;
+			case 5: case 65:
+				animateFace(' ');
+				break;	
+			case 25: case 26: case 27: case 28:
+				
+				if(Math.abs(renderer.angleX) > 15){
+					while(Math.abs(renderer.angleX) > 3){
+						renderer.angleX += -1 * (renderer.angleX / Math.abs(renderer.angleX));
+						requestRender();
+						SystemClock.sleep(50);
+					}
+				}
+				else{
+					while(Math.abs(renderer.angleX) < 25){
+						renderer.angleX += (r > 26 ? 1 : -1);
+						requestRender();
+						SystemClock.sleep(50);
+					}
+				}
+				
+				break;
+			
+			case 35: case 36: case 37: case 38:
+				
+				if(Math.abs(renderer.angleY) > 7){
+					while(Math.abs(renderer.angleY) > 3){
+						renderer.angleY += -1 * (renderer.angleY / Math.abs(renderer.angleY));
+						requestRender();
+						SystemClock.sleep(50);
+					}
+				}
+				else{
+					while(Math.abs(renderer.angleY) < 10){
+						renderer.angleY += (r > 37 ? -1 : 1);
+						requestRender();
+						SystemClock.sleep(50);
+					}
+				}
+				
+				
+				
+				
+				break;
+			default:
+				return;
+		
+		}
+		
+    }
+    
+    private void updateFace(){
+    	
+    	if(animHead >= tail){
+    		animateRandom();
+    	}
+    	
+    	for(long i= animHead; i< tail; i++){
+    		
+    		while(animHead - ttsHead > offset / 3){
+    			//animateFace(' ');
+    			//SystemClock.sleep(50);
+    		}
+    		
+    		
+    		int idx = (int) (i%offset);
+    		char ch = this.textBuffer[idx];
+    		animateFace(ch);
+    		
+    		
+    		
+    		animHead++;
+    	}
+    	
+    }
+    
+    
+    private void updateFrame(String filename, int objectType){
+    	if(filename.compareTo(rendering) == 0){
+    		//SystemClock.sleep(50);
+    		return;
+    	}
+    	
+    	renderer.updateObject(filename, objectType);
+    	requestRender();
+    	SystemClock.sleep(110);
+    	
+    	rendering = filename;
+    }
+    
+    
+    @Override
+    public boolean onKeyUp(int keyCode, android.view.KeyEvent event){
+    	
+    	
+    	boolean result = super.onKeyUp(keyCode, event);
+    	
+    	char ch = (char)event.getUnicodeChar();
+    	
+    	//Refresh scene
+    	animateFace(ch);
+    	 
+    	
+    	return result;
+    }
+    
+    
+    private void animateFace(char ch){
+
+    	
+    	//Log.v("Animating", ch + "");
+    	
+    	switch(ch){
+			case BLINK:
+				updateFrame(this.getResources().getString(R.string.eyes_closed), ObjectRenderer.HEAD);
+				SystemClock.sleep(200);
+				updateFrame(this.getResources().getString(R.string.head_base), ObjectRenderer.HEAD);
+				break;
+			case ANGREY:
+				updateFrame(this.getResources().getString(R.string.eyes_angrey), ObjectRenderer.HEAD);
+				SystemClock.sleep(200);
+				updateFrame(this.getResources().getString(R.string.head_base), ObjectRenderer.HEAD);
+				break;	
+			case SURPRISED:
+				updateFrame(this.getResources().getString(R.string.eyes_surprised), ObjectRenderer.HEAD);
+				SystemClock.sleep(200);
+				//updateFrame(this.getResources().getString(R.string.head_base), ObjectRenderer.HEAD);
+				break;	
+			case 'a': case 'i':
+				updateFrame(this.getResources().getString(R.string.mouth_AI), ObjectRenderer.MOUTH);
+				//updateFrame(this.getResources().getString(R.string.mouth_base), ObjectRenderer.MOUTH);
+				break;
+				
+			case 'c': case 'k': case 'g': case 'j':	case 'r': 
+			case 's': case Th: case 'h': case 'y': case 'z':	
+				updateFrame(this.getResources().getString(R.string.mouth_CKGJRSTHYZ), ObjectRenderer.MOUTH);
+				//updateFrame(this.getResources().getString(R.string.mouth_base), ObjectRenderer.MOUTH);
+				break;
+
+			case 'e':
+				updateFrame(this.getResources().getString(R.string.mouth_E), ObjectRenderer.MOUTH);
+				//updateFrame(this.getResources().getString(R.string.mouth_base), ObjectRenderer.MOUTH);
+				break;
+				
+			case 'f': case 'v':
+				updateFrame(this.getResources().getString(R.string.mouth_FV), ObjectRenderer.MOUTH);
+				//updateFrame(this.getResources().getString(R.string.mouth_base), ObjectRenderer.MOUTH);
+				break;
+				
+			case 'm': case  'b': case 'p':
+				updateFrame(this.getResources().getString(R.string.mouth_MBP), ObjectRenderer.MOUTH);
+				//updateFrame(this.getResources().getString(R.string.mouth_base), ObjectRenderer.MOUTH);
+				break;
+	
+			case 'o':
+				updateFrame(this.getResources().getString(R.string.mouth_O), ObjectRenderer.MOUTH);
+				//updateFrame(this.getResources().getString(R.string.mouth_base), ObjectRenderer.MOUTH);
+				break;
+				
+			//UDLNT
+			case 'u': case 'd': case 'l': case 'n': case 't':
+				updateFrame(this.getResources().getString(R.string.mouth_ULDNT), ObjectRenderer.MOUTH);
+				//updateFrame(this.getResources().getString(R.string.mouth_base), ObjectRenderer.MOUTH);
+				break;
+			
+			case 'w': case 'q': case Oo:
+				updateFrame(this.getResources().getString(R.string.mouth_WQOo), ObjectRenderer.MOUTH);
+				//updateFrame(this.getResources().getString(R.string.mouth_base), ObjectRenderer.MOUTH);
+				break;
+			
+			default:
+				updateFrame(this.getResources().getString(R.string.head_base), ObjectRenderer.HEAD);
+				updateFrame(this.getResources().getString(R.string.mouth_base), ObjectRenderer.MOUTH);
+    	}
+    	
+    	
+    }
+
+	private boolean isPunctuation(char ch){
+		char[] punctuations = {
+				' ', '.', '?', '!', ':', ';', '-', '(', ')',
+				'[', ']', '\\', '\''	};
+		
+		for(char p : punctuations){
+			if(p == ch){
+				return true;
+			}
+		}
+		
+		return false;
+		
+		
+	}
+
+
+	@Override 
+	public boolean onTrackballEvent(MotionEvent e) {
+	    renderer.angleX += e.getX() * TRACKBALL_SCALE_FACTOR;
+	    renderer.angleY += e.getY() * TRACKBALL_SCALE_FACTOR;
+	    requestRender();
+	    return true;
+	}
+	
+	@Override 
+	public boolean onTouchEvent(MotionEvent e) {
+	    float x = e.getX();
+	    float y = e.getY();
+	    switch (e.getAction()) {
+	    case MotionEvent.ACTION_MOVE:
+	        float dx = x - previousX;
+	        float dy = y - previousY;
+	        renderer.angleX += dx * TOUCH_SCALE_FACTOR;
+	        renderer.angleY += dy * TOUCH_SCALE_FACTOR;
+	        requestRender();
+	    }
+	    previousX = x;
+	    previousY = y;
+	    return true;
+	}
+	
+	public void reset(){
+		tail = ttsHead = animHead = 0;
+		textBuffer = new char[offset];
+		word = new StringBuffer();
+		tts.stop();
+		
+		if(Math.abs(renderer.angleX) > 15){
+			while(Math.abs(renderer.angleX) > 5){
+				renderer.angleX += -3 * (renderer.angleX / Math.abs(renderer.angleX));
+				requestRender();
+				SystemClock.sleep(50);
+			}
+		}
+		
+		if(Math.abs(renderer.angleY) > 7){
+			while(Math.abs(renderer.angleY) > 4){
+				renderer.angleY += -3 * (renderer.angleY / Math.abs(renderer.angleY));
+				requestRender();
+				SystemClock.sleep(50);
+			}
+		}
+		
+        animateFace(' ');
+	}
+	
+	private void onIdle(){
+		//Random generator2 = new Random( 19580427 );
+		 //float r = generator.nextInt();
+		animateRandom();
+	}
+    
+    private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
+    private final float TRACKBALL_SCALE_FACTOR = 36.0f;
+    public ObjectRenderer renderer;
+    private float previousX;
+    private float previousY;
+}

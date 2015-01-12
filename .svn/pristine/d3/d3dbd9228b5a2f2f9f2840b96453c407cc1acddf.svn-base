@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" 
+    android:id="@+id/linear_layout"  >
+
+
+ <EditText
+        android:id="@+id/speakText"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:text="Place Text Here"
+        android:layout_marginTop="90px"
+        android:inputType="textMultiLine" />
+ 
+ <Button 
+     	android:id="@+id/speakButton"
+     	android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+     	android:text="Speak"
+     />
+</LinearLayout>
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" 
+    android:id="@+id/linear_layout"  >
+ 
+
+    <RelativeLayout 
+        android:id="@+id/InnerRelativeLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" >
+
+        <Button 
+            android:background="@drawable/speak"
+            android:id="@+id/SpeakButton"
+            android:layout_alignParentLeft="true" 
+            android:layout_width="60dp"
+            android:layout_height="70dp"
+            android:layout_marginTop="10dp">
+        </Button>
+        
+        
+        <EditText 
+            android:id="@+id/SpeakEditText" 
+            android:layout_width="fill_parent"
+            android:layout_toRightOf="@id/SpeakButton"
+            android:layout_marginTop="15dp"
+            android:layout_marginRight="5dp"
+            android:hint="Enter text here"  
+            android:layout_height="wrap_content">
+        </EditText>
+        
+
+    </RelativeLayout>
+
+</LinearLayout>
