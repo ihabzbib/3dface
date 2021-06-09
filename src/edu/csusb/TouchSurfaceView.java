@@ -17,7 +17,7 @@ import android.view.MotionEvent;
 class TouchSurfaceView extends GLSurfaceView {
 
 	private static final char BLINK = '^';
-	private static final char ANGREY = '$';
+	private static final char ANGRY = '$';
 	private static final char SURPRISED = '@';
 	private static final char YAWN = '*';
 	private static final char Th = '~';
@@ -312,7 +312,7 @@ class TouchSurfaceView extends GLSurfaceView {
 				animateFace(BLINK);
 				break;
 			case 20:
-				animateFace(ANGREY);
+				animateFace(ANGRY);
 				break;
 			case 15:
 				animateFace(SURPRISED);
@@ -364,7 +364,7 @@ class TouchSurfaceView extends GLSurfaceView {
 					}
 				}
 				else{
-					animateFace(ANGREY);
+					animateFace(ANGRY);
 				}
 				break;
 			default:
@@ -433,7 +433,7 @@ class TouchSurfaceView extends GLSurfaceView {
 				SystemClock.sleep(200);
 				updateFrame(this.getResources().getString(R.string.head_base), ObjectRenderer.HEAD);
 				break;
-			case ANGREY:
+			case ANGRY:
 				updateFrame(this.getResources().getString(R.string.eyes_angrey), ObjectRenderer.HEAD);
 				break;	
 			case SURPRISED:
